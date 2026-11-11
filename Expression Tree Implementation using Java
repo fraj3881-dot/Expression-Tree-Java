@@ -1,9 +1,6 @@
 import java.util.Stack;
 
-/**
- * A node in a binary expression tree.
- * Leaves store integer operands, and internal nodes store operators.
- */
+
 class Node {
     String value;
     Node left;
@@ -16,14 +13,7 @@ class Node {
     }
 }
 
-/**
- * Builds, evaluates, and displays a binary expression tree from postfix input.
- *
- * Supported formats:
- *  - Compact single-digit postfix: 53+82-*
- *  - Space-separated integers: 12 3 + 8 2 - *
- *  - Negative integers with spaces: -12 3 *
- */
+
 public class ExpressionTree {
 
     private static boolean isOperator(String token) {
@@ -116,7 +106,7 @@ public class ExpressionTree {
         }
     }
 
-    // 3. In-order traversal with parentheses to preserve precedence.
+    
     public static void printInfix(Node root) {
         if (root == null) {
             throw new IllegalArgumentException("Expression tree cannot be null.");
@@ -134,7 +124,7 @@ public class ExpressionTree {
         System.out.print(")");
     }
 
-    // Optional enhancement: display the structure of the tree sideways.
+     
     public static void printTree(Node root) {
         printTree(root, 0);
     }
@@ -167,7 +157,7 @@ public class ExpressionTree {
             System.out.println("\nExpression tree (sideways):");
             printTree(root);
 
-            // Additional example demonstrating multiple-digit operands.
+             
             String advancedPostfix = "12 3 + 8 2 - *";
             Node advancedRoot = buildTree(advancedPostfix);
             System.out.println("\nAdditional example:");
