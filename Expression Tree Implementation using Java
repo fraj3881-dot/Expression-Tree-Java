@@ -1,0 +1,184 @@
+import java.util.Stack;
+
+/**
+ * A node in a binary expression tree.
+ * Leaves store integer operands, and internal nodes store operators.
+ */
+class Node {
+    String value;
+    Node left;
+    Node right;
+
+    public Node(String value) {
+        this.value = value;
+        this.left = null;
+        this.right = null;
+    }
+}
+
+/**
+ * Builds, evaluates, and displays a binary expression tree from postfix input.
+ *
+ * Supported formats:
+ *  - Compact single-digit postfix: 53+82-*
+ *  - Space-separated integers: 12 3 + 8 2 - *
+ *  - Negative integers with spaces: -12 3 *
+ */
+public class ExpressionTree {
+
+    private static boolean isOperator(String token) {
+        return token.length() == 1 && "+-*/".contains(token);
+    }
+
+    private static boolean isInteger(String token) {
+        return token.matches("[+-]?\\d+");
+    }
+
+    // 1. Construct the expression tree using a Stack<Node>.
+    public static Node buildTree(String postfix) {
+        if (postfix == null || postfix.trim().isEmpty()) {
+            throw new IllegalArgumentException("Postfix expression cannot be empty.");
+        }
+
+        String input = postfix.trim();
+        // Spaces allow multi-digit and negative integers without ambiguity.
+        String[] tokens = input.matches(".*\\s+.*")
+                ? input.split("\\s+")
+                : input.split("");
+
+        Stack<Node> stack = new Stack<>();
+
+        for (String token : tokens) {
+            if (isInteger(token)) {
+                try {
+                    Integer.parseInt(token); // Validate the integer range.
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException(
+                            "Integer is out of range: " + token, e);
+                }
+                stack.push(new Node(token));
+            } else if (isOperator(token)) {
+                if (stack.size() < 2) {
+                    throw new IllegalArgumentException(
+                            "Invalid postfix: operator '" + token
+                                    + "' requires two operands.");
+                }
+
+                Node right = stack.pop(); // Important: pop right first.
+                Node left = stack.pop();
+                Node operator = new Node(token);
+                operator.left = left;
+                operator.right = right;
+                stack.push(operator);
+            } else {
+                throw new IllegalArgumentException("Invalid token: " + token);
+            }
+        }
+
+        if (stack.size() != 1) {
+            throw new IllegalArgumentException(
+                    "Invalid postfix: operands and operators do not match.");
+        }
+
+        return stack.pop();
+    }
+
+    // 2. Post-order traversal: evaluate left, right, then operator.
+    public static int evaluate(Node root) {
+        if (root == null) {
+            throw new IllegalArgumentException("Expression tree cannot be null.");
+        }
+
+        if (!isOperator(root.value)) {
+            return Integer.parseInt(root.value);
+        }
+
+        int leftValue = evaluate(root.left);
+        int rightValue = evaluate(root.right);
+
+        switch (root.value) {
+            case "+":
+                return Math.addExact(leftValue, rightValue);
+            case "-":
+                return Math.subtractExact(leftValue, rightValue);
+            case "*":
+                return Math.multiplyExact(leftValue, rightValue);
+            case "/":
+                if (rightValue == 0) {
+                    throw new ArithmeticException("Division by zero is not allowed.");
+                }
+                if (leftValue == Integer.MIN_VALUE && rightValue == -1) {
+                    throw new ArithmeticException("Integer overflow during division.");
+                }
+                return leftValue / rightValue; // Integer division.
+            default:
+                throw new IllegalArgumentException("Unknown operator: " + root.value);
+        }
+    }
+
+    // 3. In-order traversal with parentheses to preserve precedence.
+    public static void printInfix(Node root) {
+        if (root == null) {
+            throw new IllegalArgumentException("Expression tree cannot be null.");
+        }
+
+        if (!isOperator(root.value)) {
+            System.out.print(root.value);
+            return;
+        }
+
+        System.out.print("(");
+        printInfix(root.left);
+        System.out.print(" " + root.value + " ");
+        printInfix(root.right);
+        System.out.print(")");
+    }
+
+    // Optional enhancement: display the structure of the tree sideways.
+    public static void printTree(Node root) {
+        printTree(root, 0);
+    }
+
+    private static void printTree(Node root, int depth) {
+        if (root == null) {
+            return;
+        }
+
+        printTree(root.right, depth + 1);
+        for (int i = 0; i < depth; i++) {
+            System.out.print("    ");
+        }
+        System.out.println(root.value);
+        printTree(root.left, depth + 1);
+    }
+
+    public static void main(String[] args) {
+        String postfix = "53+82-*"; // Assignment test case.
+
+        try {
+            Node root = buildTree(postfix);
+
+            System.out.println("Postfix: " + postfix);
+            System.out.print("Infix: ");
+            printInfix(root);
+            System.out.println();
+            System.out.println("Result: " + evaluate(root));
+
+            System.out.println("\nExpression tree (sideways):");
+            printTree(root);
+
+            // Additional example demonstrating multiple-digit operands.
+            String advancedPostfix = "12 3 + 8 2 - *";
+            Node advancedRoot = buildTree(advancedPostfix);
+            System.out.println("\nAdditional example:");
+            System.out.println("Postfix: " + advancedPostfix);
+            System.out.print("Infix: ");
+            printInfix(advancedRoot);
+            System.out.println();
+            System.out.println("Result: " + evaluate(advancedRoot));
+
+        } catch (IllegalArgumentException | ArithmeticException e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+}
